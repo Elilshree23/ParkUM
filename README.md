@@ -1,2 +1,2 @@
-# Smart-Parking-System
-Data Structures Group Assignment - Smart Parking Management System
+# ParkUM
+Smart Parking Management System
