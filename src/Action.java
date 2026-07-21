@@ -1,18 +1,23 @@
 public class Action {
 
-    private final String actionType;
+    private final ActionType actionType;
     private final String licensePlate;
     private final String ownerName;
     private final String parkingSlot;
 
-    public Action(String actionType, String licensePlate, String ownerName, String parkingSlot) {
+    public Action(
+            ActionType actionType,
+            String licensePlate,
+            String ownerName,
+            String parkingSlot
+    ) {
         this.actionType = actionType;
         this.licensePlate = licensePlate;
         this.ownerName = ownerName;
         this.parkingSlot = parkingSlot;
     }
 
-    public String getActionType() {
+    public ActionType getActionType() {
         return actionType;
     }
 

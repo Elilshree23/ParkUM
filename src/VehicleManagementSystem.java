@@ -10,80 +10,220 @@ public class VehicleManagementSystem {
         size = 0;
     }
 
-    // Add operation: Adding a new vehicle record to the back of the list
-    public void addVehicle(String licensePlate, String ownerName, String parkingSlot) {
-        VehicleNode newNode = new VehicleNode(licensePlate, ownerName, parkingSlot);
+    public boolean addVehicle(
+            String licensePlate,
+            String ownerName,
+            String parkingSlot
+    ) {
+
+        if (licensePlate == null
+                || licensePlate.isBlank()) {
+
+            System.out.println(
+                    "Error: License plate cannot be empty."
+            );
+
+            return false;
+        }
+
+        if (ownerName == null
+                || ownerName.isBlank()) {
+
+            System.out.println(
+                    "Error: Owner name cannot be empty."
+            );
+
+            return false;
+        }
+
+        if (parkingSlot == null
+                || parkingSlot.isBlank()) {
+
+            System.out.println(
+                    "Error: Parking slot cannot be empty."
+            );
+
+            return false;
+        }
+
+        String normalizedPlate =
+                licensePlate.trim().toUpperCase();
+
+        String normalizedOwner =
+                ownerName.trim();
+
+        String normalizedSlot =
+                parkingSlot.trim().toUpperCase();
+
+        if (getVehicle(normalizedPlate) != null) {
+
+            System.out.println(
+                    "Error: Vehicle "
+                            + normalizedPlate
+                            + " is already registered."
+            );
+
+            return false;
+        }
+
+        if (isParkingSlotOccupied(normalizedSlot)) {
+
+            System.out.println(
+                    "Error: Parking slot "
+                            + normalizedSlot
+                            + " is already occupied."
+            );
+
+            return false;
+        }
+
+        VehicleNode newNode =
+                new VehicleNode(
+                        normalizedPlate,
+                        normalizedOwner,
+                        normalizedSlot
+                );
 
         if (head == null) {
+
             head = newNode;
             tail = newNode;
+
         } else {
+
             tail.setNext(newNode);
             tail = newNode;
         }
 
         size++;
-        System.out.println("Added: Vehicle " + licensePlate + " at " + parkingSlot);
+
+        System.out.println(
+                "Added: Vehicle "
+                        + normalizedPlate
+                        + " at "
+                        + normalizedSlot
+        );
+
+        return true;
     }
 
-    // Remove operation: Finds and removes a vehicle by its license plate
-    public boolean removeVehicle(String licensePlate) {
-        if (head == null) {
-            System.out.println("System is empty. No vehicles to remove.");
+    public boolean removeVehicle(
+            String licensePlate
+    ) {
+
+        if (licensePlate == null
+                || licensePlate.isBlank()) {
+
+            System.out.println(
+                    "Error: License plate cannot be empty."
+            );
+
             return false;
         }
 
-        if (head.getLicensePlate().equalsIgnoreCase(licensePlate)) {
+        String normalizedPlate =
+                licensePlate.trim().toUpperCase();
+
+        if (head == null) {
+
+            System.out.println(
+                    "System is empty. "
+                            + "No vehicles to remove."
+            );
+
+            return false;
+        }
+
+        if (head.getLicensePlate()
+                .equals(normalizedPlate)) {
+
             head = head.getNext();
+
             if (head == null) {
                 tail = null;
             }
+
             size--;
-            System.out.println("Removed: Vehicle " + licensePlate);
+
+            System.out.println(
+                    "Removed: Vehicle "
+                            + normalizedPlate
+            );
+
             return true;
         }
 
-        VehicleNode current = head.getNext();
         VehicleNode previous = head;
+        VehicleNode current = head.getNext();
 
         while (current != null) {
-            if (current.getLicensePlate().equalsIgnoreCase(licensePlate)) {
-                break;
+
+            if (current.getLicensePlate()
+                    .equals(normalizedPlate)) {
+
+                previous.setNext(
+                        current.getNext()
+                );
+
+                if (current == tail) {
+                    tail = previous;
+                }
+
+                size--;
+
+                System.out.println(
+                        "Removed: Vehicle "
+                                + normalizedPlate
+                );
+
+                return true;
             }
+
             previous = current;
             current = current.getNext();
         }
 
-        if (current == null) {
-            System.out.println("Error: Vehicle " + licensePlate + " does not exist.");
-            return false;
-        }
+        System.out.println(
+                "Error: Vehicle "
+                        + normalizedPlate
+                        + " does not exist."
+        );
 
-        previous.setNext(current.getNext());
-        if (current == tail) {
-            tail = previous;
-        }
-
-        size--;
-        System.out.println("Removed: Vehicle " + licensePlate);
-        return true;
+        return false;
     }
 
-    // Display operation: Prints all the currently parked vehicles record
     public void displayVehicles() {
+
         if (head == null) {
-            System.out.println("System is empty. No vehicles can be displayed.");
+
+            System.out.println(
+                    "System is empty. "
+                            + "No vehicles can be displayed."
+            );
+
             return;
         }
 
-        System.out.println("---Current Vehicles Record---");
+        System.out.println(
+                "---Current Vehicles Record---"
+        );
+
         VehicleNode current = head;
+
         while (current != null) {
-            System.out.println("License Plate: " + current.getLicensePlate()
-                    + " | Owner: " + current.getOwnerName()
-                    + " | Parking Slot: " + current.getParkingSlot());
+
+            System.out.println(
+                    "License Plate: "
+                            + current.getLicensePlate()
+                            + " | Owner: "
+                            + current.getOwnerName()
+                            + " | Parking Slot: "
+                            + current.getParkingSlot()
+            );
+
             current = current.getNext();
         }
+
         System.out.println();
     }
 
@@ -91,14 +231,61 @@ public class VehicleManagementSystem {
         return size;
     }
 
-    public VehicleNode getVehicle(String licensePlate) {
+    public VehicleNode getVehicle(
+            String licensePlate
+    ) {
+
+        if (licensePlate == null
+                || licensePlate.isBlank()) {
+
+            return null;
+        }
+
+        String normalizedPlate =
+                licensePlate.trim().toUpperCase();
+
         VehicleNode current = head;
+
         while (current != null) {
-            if (current.getLicensePlate().equalsIgnoreCase(licensePlate)) {
+
+            if (current.getLicensePlate()
+                    .equals(normalizedPlate)) {
+
                 return current;
             }
+
             current = current.getNext();
         }
+
         return null;
+    }
+
+    public boolean isParkingSlotOccupied(
+            String parkingSlot
+    ) {
+
+        if (parkingSlot == null
+                || parkingSlot.isBlank()) {
+
+            return false;
+        }
+
+        String normalizedSlot =
+                parkingSlot.trim().toUpperCase();
+
+        VehicleNode current = head;
+
+        while (current != null) {
+
+            if (current.getParkingSlot()
+                    .equals(normalizedSlot)) {
+
+                return true;
+            }
+
+            current = current.getNext();
+        }
+
+        return false;
     }
 }

@@ -5,7 +5,11 @@ public class VehicleNode {
     private final String parkingSlot;
     private VehicleNode next;
 
-    public VehicleNode(String licensePlate, String ownerName, String parkingSlot) {
+    public VehicleNode(
+            String licensePlate,
+            String ownerName,
+            String parkingSlot
+    ) {
         this.licensePlate = licensePlate;
         this.ownerName = ownerName;
         this.parkingSlot = parkingSlot;
