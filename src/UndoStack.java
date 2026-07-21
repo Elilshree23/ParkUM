@@ -10,37 +10,33 @@ public class UndoStack {
 
     public boolean pushAction(
             ActionType actionType,
+            String username,
             String licensePlate,
             String ownerName,
-            String parkingSlot
+            String parkingSlot,
+            String description
     ) {
 
         if (actionType == null) {
-            System.out.println(
-                    "Error: Action type cannot be null."
-            );
+            System.out.println("Error: Action type cannot be null.");
             return false;
         }
 
-        if (licensePlate == null
-                || licensePlate.isBlank()) {
-
-            System.out.println(
-                    "Error: License plate cannot be empty."
-            );
+        if (username == null || username.isBlank()) {
+            System.out.println("Error: Username cannot be empty.");
             return false;
         }
 
         stack.push(
                 new Action(
                         actionType,
-                        licensePlate.trim().toUpperCase(),
-                        ownerName,
-                        parkingSlot
+                        username.trim().toLowerCase(),
+                        licensePlate == null ? "" : licensePlate.trim().toUpperCase(),
+                        ownerName == null ? "" : ownerName.trim(),
+                        parkingSlot == null ? "" : parkingSlot.trim().toUpperCase(),
+                        description == null ? "" : description.trim()
                 )
         );
-
-        System.out.println("Action saved.");
 
         return true;
     }
@@ -49,22 +45,23 @@ public class UndoStack {
 
         if (stack.isEmpty()) {
 
-            System.out.println(
-                    "No actions to undo."
-            );
+            System.out.println("No actions available to undo.");
 
             return null;
         }
 
-        Action lastAction = stack.pop();
+        return stack.pop();
+    }
 
-        System.out.println(
-                "Undoing: "
-                        + lastAction.getActionType()
-                        + " for vehicle "
-                        + lastAction.getLicensePlate()
-        );
+    public boolean isEmpty() {
+        return stack.isEmpty();
+    }
 
-        return lastAction;
+    public int size() {
+        return stack.size();
+    }
+
+    public void clear() {
+        stack.clear();
     }
 }
