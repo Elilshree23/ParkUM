@@ -3,33 +3,30 @@ import java.util.Queue;
 
 public class VehicleQueue {
 
-    private Queue<String> queue;
+    private final Queue<String> vehicleQueue;
 
     public VehicleQueue() {
-        queue = new LinkedList<>();
+        vehicleQueue = new LinkedList<>();
     }
 
-    // Add vehicle to queue
     public void enqueue(String licensePlate) {
-        queue.offer(licensePlate);
+        vehicleQueue.offer(licensePlate);
         System.out.println("Vehicle " + licensePlate + " entered queue.");
     }
 
-    // Remove vehicle from queue
     public String dequeue() {
-        if (queue.isEmpty()) {
+        if (vehicleQueue.isEmpty()) {
             System.out.println("Queue is empty.");
             return null;
         }
-        String removed = queue.poll();
+        String removed = vehicleQueue.poll();
         System.out.println("Vehicle " + removed + " processed and exited.");
         return removed;
     }
 
-    // Display queue
     public void displayQueue() {
         System.out.println("--- Current Vehicle Queue ---");
-        for (String vehicle : queue) {
+        for (String vehicle : vehicleQueue) {
             System.out.println(vehicle);
         }
         System.out.println();

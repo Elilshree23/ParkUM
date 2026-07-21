@@ -1,138 +1,144 @@
 import java.util.HashMap;
 
-//A new node to build BST
-class BSTNode{
-    VehicleNode vehicle;
-    BSTNode left;
-    BSTNode right;
+class BSTNode {
+    private VehicleNode vehicle;
+    private BSTNode left;
+    private BSTNode right;
 
-    public BSTNode(VehicleNode vehicle){
-        this.vehicle=vehicle;
-        this.left=null;
-        this.right=null;
+    public BSTNode(VehicleNode vehicle) {
+        this.vehicle = vehicle;
+        this.left = null;
+        this.right = null;
+    }
+
+    public VehicleNode getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(VehicleNode vehicle) {
+        this.vehicle = vehicle;
+    }
+
+    public BSTNode getLeft() {
+        return left;
+    }
+
+    public void setLeft(BSTNode left) {
+        this.left = left;
+    }
+
+    public BSTNode getRight() {
+        return right;
+    }
+
+    public void setRight(BSTNode right) {
+        this.right = right;
     }
 }
 
-
 public class VehicleSearchSystem {
 
-    // HashMap for fast retrieval
     private HashMap<String, VehicleNode> vehicleMap;
-
-    // BST for sorting and searching
     private BSTNode root;
 
     public VehicleSearchSystem() {
         vehicleMap = new HashMap<>();
-        root=null;
+        root = null;
     }
 
-    // Add vehicle record to both data structures
     public void addVehicle(String licensePlate, String ownerName, String parkingSlot) {
-        VehicleNode vehicle= new VehicleNode(licensePlate, ownerName, parkingSlot);
-        vehicleMap.put(licensePlate, vehicle);//Add the vehicle to the HashMap
-        root=insertIntoBST(root,vehicle);//Add to BST
+        VehicleNode vehicle = new VehicleNode(licensePlate, ownerName, parkingSlot);
+        vehicleMap.put(licensePlate, vehicle);
+        root = insertIntoBST(root, vehicle);
         System.out.println("Vehicle added to the Optimizer System.");
     }
 
-    //Recursive BST insert (sorts automatically by license plate)
     private BSTNode insertIntoBST(BSTNode node, VehicleNode vehicle) {
-        if(node==null){
+        if (node == null) {
             return new BSTNode(vehicle);
         }
 
-        //Compare license plates alphabetically to decide left or right branch
-        if(vehicle.licensePlate.compareToIgnoreCase(node.vehicle.licensePlate)<0){
-            node.left=insertIntoBST(node.left,vehicle);
-        }
-        else if(vehicle.licensePlate.compareToIgnoreCase(node.vehicle.licensePlate)>0){
-            node.right=insertIntoBST(node.right,vehicle);
+        int comparison = vehicle.getLicensePlate()
+                .compareToIgnoreCase(node.getVehicle().getLicensePlate());
+
+        if (comparison < 0) {
+            node.setLeft(insertIntoBST(node.getLeft(), vehicle));
+        } else if (comparison > 0) {
+            node.setRight(insertIntoBST(node.getRight(), vehicle));
         }
         return node;
     }
 
-    // Search by plate number
     public void searchVehicleFast(String licensePlate) {
         VehicleNode found = vehicleMap.get(licensePlate);
-        if(found != null) {
+        if (found != null) {
             System.out.println("\nVehicle Found!");
-            System.out.println("License Plate: "+found.licensePlate+" | Owner: "+found.ownerName+" | Parking Slot: "+found.parkingSlot);
-
-        }
-        else {
+            System.out.println("License Plate: " + found.getLicensePlate()
+                    + " | Owner: " + found.getOwnerName()
+                    + " | Parking Slot: " + found.getParkingSlot());
+        } else {
             System.out.println("\nVehicle not found.");
         }
     }
 
-    //Display records sorted alphabetically using BST In-Order Traversal
-    public void displayVehiclesSorted(){
+    public void displayVehiclesSorted() {
         System.out.println("\n--- Vehicles Records (Sorted Alphabetically) ---");
-        if(root==null){
+        if (root == null) {
             System.out.println("No vehicles in the system.");
-        }
-        else{
+        } else {
             inOrderTraversal(root);
         }
     }
 
-    //Helper method for sorting (Visit left, root, right)
-    private void inOrderTraversal(BSTNode node){
-        if(node!=null){
-            inOrderTraversal(node.left);
-            System.out.println("License Plate: "+node.vehicle.licensePlate+" | Owner: "+node.vehicle.ownerName+" | Parking Slot: "+node.vehicle.parkingSlot);
-            inOrderTraversal(node.right);
+    private void inOrderTraversal(BSTNode node) {
+        if (node != null) {
+            inOrderTraversal(node.getLeft());
+            System.out.println("License Plate: " + node.getVehicle().getLicensePlate()
+                    + " | Owner: " + node.getVehicle().getOwnerName()
+                    + " | Parking Slot: " + node.getVehicle().getParkingSlot());
+            inOrderTraversal(node.getRight());
         }
     }
 
-    // Remove vehicle from both data structures
     public void removeVehicle(String licensePlate) {
-        if(vehicleMap.containsKey(licensePlate)) {
-            vehicleMap.remove(licensePlate);//remove from the HashMap
-            root=deleteFromBST(root,licensePlate);//remove from BST
+        if (vehicleMap.containsKey(licensePlate)) {
+            vehicleMap.remove(licensePlate);
+            root = deleteFromBST(root, licensePlate);
             System.out.println("Vehicle removed from the Optimizer System.");
-        }
-        else {
+        } else {
             System.out.println("Vehicle does not exist.");
         }
     }
 
-    //Recursive delete from BST
     private BSTNode deleteFromBST(BSTNode node, String licensePlate) {
-        if(node==null){
+        if (node == null) {
             return null;
         }
-        int compareValue = node.vehicle.licensePlate.compareToIgnoreCase(licensePlate);
 
-        if(compareValue<0){
-            node.left=deleteFromBST(node.left,licensePlate);
-        }
-        else if(compareValue>0){
-            node.right=deleteFromBST(node.right,licensePlate);
-        }
-        else{
-            //Node to delete is found
+        int comparison = licensePlate.compareToIgnoreCase(node.getVehicle().getLicensePlate());
 
-            //Case 1: One child or no child
-            if(node.left==null){
-                return node.right;
+        if (comparison < 0) {
+            node.setLeft(deleteFromBST(node.getLeft(), licensePlate));
+        } else if (comparison > 0) {
+            node.setRight(deleteFromBST(node.getRight(), licensePlate));
+        } else {
+            if (node.getLeft() == null) {
+                return node.getRight();
             }
-            if(node.right==null){
-                return node.left;
+            if (node.getRight() == null) {
+                return node.getLeft();
             }
 
-            //Case 2: Node with two children
-            //Find the smallest node in the right subtree
-            BSTNode minNode=findMin(node.right);
-            node.vehicle=minNode.vehicle;//Replace value
-            node.right=deleteFromBST(node.right,minNode.vehicle.licensePlate);//Delete the duplicate
+            BSTNode minNode = findMin(node.getRight());
+            node.setVehicle(minNode.getVehicle());
+            node.setRight(deleteFromBST(node.getRight(), minNode.getVehicle().getLicensePlate()));
         }
         return node;
     }
 
-    //Helper method to find the smallest node
-    private BSTNode findMin(BSTNode node){
-        while(node.left!=null){
-            node=node.left;
+    private BSTNode findMin(BSTNode node) {
+        while (node.getLeft() != null) {
+            node = node.getLeft();
         }
         return node;
     }

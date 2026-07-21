@@ -1,14 +1,34 @@
 public class VehicleNode {
-    //Data fields in a vehicle
-    String licensePlate;
-    String ownerName;
-    String parkingSlot;
-    VehicleNode next;//Pointer to the next vehicle in the list
+
+    private final String licensePlate;
+    private final String ownerName;
+    private final String parkingSlot;
+    private VehicleNode next;
 
     public VehicleNode(String licensePlate, String ownerName, String parkingSlot) {
         this.licensePlate = licensePlate;
         this.ownerName = ownerName;
         this.parkingSlot = parkingSlot;
-        next = null;
+        this.next = null;
+    }
+
+    public String getLicensePlate() {
+        return licensePlate;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public String getParkingSlot() {
+        return parkingSlot;
+    }
+
+    public VehicleNode getNext() {
+        return next;
+    }
+
+    public void setNext(VehicleNode next) {
+        this.next = next;
     }
 }
