@@ -1,22 +1,17 @@
-import java.util.HashMap;
-
 public class LoginSystem {
-
-    private final UserDatabase database;
-
-    private final HashMap<String, Integer> loginAttempts;
-    private final HashMap<String, Boolean> lockedAccounts;
-
-    private User currentUser;
 
     private static final int MAX_ATTEMPTS = 3;
 
+    private final UserDatabase database;
+    private User currentUser;
+
     public LoginSystem(UserDatabase database) {
 
-        this.database = database;
+        if (database == null) {
+            throw new IllegalArgumentException("User database cannot be null.");
+        }
 
-        loginAttempts = new HashMap<>();
-        lockedAccounts = new HashMap<>();
+        this.database = database;
     }
 
     public boolean login(String username, String password) {
@@ -33,25 +28,29 @@ public class LoginSystem {
 
         username = username.trim().toLowerCase();
 
-        if (Boolean.TRUE.equals(lockedAccounts.get(username))) {
+        User user = database.getUser(username);
 
-            AuditLog.log(username, "LOGIN BLOCKED (ACCOUNT LOCKED)");
-            System.out.println("Account is locked.");
-            return false;
-        }
-
-        if (!database.userExists(username)) {
+        if (user == null) {
 
             AuditLog.log(username, "LOGIN FAILED (USER NOT FOUND)");
             System.out.println("User does not exist.");
+
+            return false;
+        }
+
+        if (user.isAccountLocked()) {
+
+            AuditLog.log(username, "LOGIN BLOCKED (ACCOUNT LOCKED)");
+            System.out.println("Account is locked.");
+
             return false;
         }
 
         if (database.validatePassword(username, password)) {
 
-            currentUser = database.getUser(username);
+            user.resetFailedLoginAttempts();
 
-            loginAttempts.remove(username);
+            currentUser = user;
 
             AuditLog.log(username, "LOGIN SUCCESS");
 
@@ -60,29 +59,41 @@ public class LoginSystem {
             return true;
         }
 
-        int attempts = loginAttempts.getOrDefault(username, 0) + 1;
-
-        loginAttempts.put(username, attempts);
+        user.incrementFailedLoginAttempts();
 
         AuditLog.log(username, "LOGIN FAILED");
 
-        if (attempts >= MAX_ATTEMPTS) {
+        if (user.getFailedLoginAttempts() >= MAX_ATTEMPTS) {
 
-            lockedAccounts.put(username, true);
+            user.lockAccount();
 
             AuditLog.log(username, "ACCOUNT LOCKED");
 
-            System.out.println("Account locked after "
-                    + MAX_ATTEMPTS
-                    + " failed attempts.");
+            System.out.println(
+                    "Account locked after "
+                            + MAX_ATTEMPTS
+                            + " failed attempts."
+            );
 
         } else {
 
-            System.out.println("Wrong password. Remaining attempts: "
-                    + (MAX_ATTEMPTS - attempts));
+            System.out.println(
+                    "Wrong password. Remaining attempts: "
+                            + (MAX_ATTEMPTS - user.getFailedLoginAttempts())
+            );
         }
 
         return false;
+    }
+
+    public void logout() {
+
+        if (currentUser != null) {
+
+            AuditLog.log(currentUser.getUsername(), "LOGOUT");
+
+            currentUser = null;
+        }
     }
 
     public User getCurrentUser() {
@@ -93,16 +104,19 @@ public class LoginSystem {
         return currentUser != null;
     }
 
-    public void logout() {
+    public void unlockUser(String username) {
 
-        if (currentUser != null) {
+        User user = database.getUser(username);
 
-            AuditLog.log(
-                    currentUser.getUsername(),
-                    "LOGOUT"
-            );
+        if (user != null) {
 
-            currentUser = null;
+            user.unlockAccount();
+
+            AuditLog.log(username, "ACCOUNT UNLOCKED");
         }
+    }
+
+    public int getMaxAttempts() {
+        return MAX_ATTEMPTS;
     }
 }

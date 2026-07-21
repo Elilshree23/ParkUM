@@ -1,10 +1,11 @@
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 public class UserDatabase {
 
-    private final HashMap<String, User> users;
+    private final Map<String, User> users;
 
     public UserDatabase() {
 
@@ -30,20 +31,19 @@ public class UserDatabase {
             return false;
         }
 
-        String normalized = username.trim().toLowerCase();
+        String normalizedUsername = username.trim().toLowerCase();
 
-        if (users.containsKey(normalized)) {
-            System.out.println("Username already exists.");
+        if (users.containsKey(normalizedUsername)) {
             return false;
         }
 
         User user = new User(
-                normalized,
+                normalizedUsername,
                 PasswordHasher.hashPassword(password),
                 role
         );
 
-        users.put(normalized, user);
+        users.put(normalizedUsername, user);
 
         return true;
     }
@@ -57,8 +57,21 @@ public class UserDatabase {
         return users.get(username.trim().toLowerCase());
     }
 
+    public boolean userExists(String username) {
+
+        if (username == null || username.isBlank()) {
+            return false;
+        }
+
+        return users.containsKey(username.trim().toLowerCase());
+    }
+
     public boolean validatePassword(String username,
                                     String password) {
+
+        if (password == null) {
+            return false;
+        }
 
         User user = getUser(username);
 
@@ -79,15 +92,6 @@ public class UserDatabase {
         }
 
         return users.remove(username.trim().toLowerCase()) != null;
-    }
-
-    public boolean userExists(String username) {
-
-        if (username == null || username.isBlank()) {
-            return false;
-        }
-
-        return users.containsKey(username.trim().toLowerCase());
     }
 
     public Collection<User> getAllUsers() {
