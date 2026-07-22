@@ -51,16 +51,17 @@ This project demonstrates practical applications of **Object-Oriented Programmin
 
 ---
 
-## 📚 Data Structures Used
+# 📚 Data Structures Used
 
-| Data Structure                | Implementation Purpose                                              |
-| **Linked List**               | Custom storage for vehicle records                                  |
-| **Queue**                     | Orderly FIFO processing of arriving vehicles                        |
-| **Stack**                     | Reverting previous system actions (Undo system)                     |                        
-| **HashMap**                   | Fast $O(1)$ vehicle lookup                                          |
-| **Binary Search Tree**        | In-order traversal for sorted vehicle listings                      |
-| **Priority Queue (Min Heap)** | Instant access to the nearest available parking slot                |
-| **Graph**                     | Modeling campus road networks and parking intersections             |
+| Data Structure | Purpose |
+|---|---|
+| Linked List | Store vehicle records |
+| Queue | Manage vehicle arrival order |
+| Stack | Undo previous operations |
+| HashMap | Fast vehicle searching |
+| Binary Search Tree | Sorted vehicle records |
+| Priority Queue | Nearest parking slot allocation |
+| Graph | Campus navigation system |
 
 ---
 
