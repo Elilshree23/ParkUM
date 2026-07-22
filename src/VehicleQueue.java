@@ -3,107 +3,69 @@ import java.util.Queue;
 
 public class VehicleQueue {
 
-    private final Queue<String>
-            vehicleQueue;
+    private final Queue<String> queue;
 
     public VehicleQueue() {
-
-        vehicleQueue =
-                new LinkedList<>();
+        queue = new LinkedList<>();
     }
 
-    public boolean enqueue(
-            String licensePlate
-    ) {
+    public boolean enqueue(String plate) {
 
-        if (licensePlate == null
-                || licensePlate.isBlank()) {
+        ValidationUtil.requirePlate(plate);
 
-            System.out.println(
-                    "Error: License plate "
-                            + "cannot be empty."
-            );
-
+        if (queue.contains(plate.toUpperCase())) {
+            System.out.println("Vehicle already waiting.");
             return false;
         }
 
-        String normalizedPlate =
-                licensePlate.trim().toUpperCase();
+        queue.offer(plate.toUpperCase());
 
-        if (vehicleQueue.contains(
-                normalizedPlate
-        )) {
-
-            System.out.println(
-                    "Error: Vehicle "
-                            + normalizedPlate
-                            + " is already in the queue."
-            );
-
-            return false;
-        }
-
-        vehicleQueue.offer(
-                normalizedPlate
-        );
-
-        System.out.println(
-                "Vehicle "
-                        + normalizedPlate
-                        + " entered queue."
-        );
+        System.out.println("Queued : " + plate);
 
         return true;
     }
 
     public String dequeue() {
 
-        if (vehicleQueue.isEmpty()) {
-
-            System.out.println(
-                    "Queue is empty."
-            );
-
+        if (queue.isEmpty()) {
+            System.out.println("Queue empty.");
             return null;
         }
 
-        String removed =
-                vehicleQueue.poll();
+        String plate = queue.poll();
 
-        System.out.println(
-                "Vehicle "
-                        + removed
-                        + " processed and exited."
-        );
+        System.out.println("Processing : " + plate);
 
-        return removed;
+        return plate;
+    }
+
+    public String peek() {
+        return queue.peek();
+    }
+
+    public boolean isEmpty() {
+        return queue.isEmpty();
+    }
+
+    public int size() {
+        return queue.size();
     }
 
     public void displayQueue() {
 
-        if (vehicleQueue.isEmpty()) {
+        System.out.println("\n------ Vehicle Queue ------");
 
-            System.out.println(
-                    "Queue is currently empty."
-            );
+        if (queue.isEmpty()) {
+            System.out.println("Queue empty.");
+        } else {
 
-            return;
+            int no = 1;
+
+            for (String vehicle : queue) {
+                System.out.println(no++ + ". " + vehicle);
+            }
         }
 
-        System.out.println(
-                "--- Current Vehicle Queue ---"
-        );
-
-        for (
-                String vehicle
-                : vehicleQueue
-        ) {
-
-            System.out.println(
-                    vehicle
-            );
-        }
-
-        System.out.println();
+        System.out.println("---------------------------");
     }
 }

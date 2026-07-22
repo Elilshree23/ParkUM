@@ -1,18 +1,4 @@
-﻿public enum ActionType {
-
-    LOGIN,
-
-    LOGOUT,
-
+public enum ActionType {
     ADD,
-
-    REMOVE,
-
-    UPDATE,
-
-    REGISTER,
-
-    SEARCH,
-
-    UNDO
+    REMOVE
 }

@@ -2,38 +2,12 @@ import java.util.HashMap;
 
 class BSTNode {
 
-    private VehicleNode vehicle;
-    private BSTNode left;
-    private BSTNode right;
+    VehicleNode vehicle;
+    BSTNode left;
+    BSTNode right;
 
-    public BSTNode(VehicleNode vehicle) {
+    BSTNode(VehicleNode vehicle) {
         this.vehicle = vehicle;
-        this.left = null;
-        this.right = null;
-    }
-
-    public VehicleNode getVehicle() {
-        return vehicle;
-    }
-
-    public void setVehicle(VehicleNode vehicle) {
-        this.vehicle = vehicle;
-    }
-
-    public BSTNode getLeft() {
-        return left;
-    }
-
-    public void setLeft(BSTNode left) {
-        this.left = left;
-    }
-
-    public BSTNode getRight() {
-        return right;
-    }
-
-    public void setRight(BSTNode right) {
-        this.right = right;
     }
 }
 
@@ -44,340 +18,141 @@ public class VehicleSearchSystem {
 
     public VehicleSearchSystem() {
         vehicleMap = new HashMap<>();
-        root = null;
     }
 
-    public boolean addVehicle(
-            String licensePlate,
-            String ownerName,
-            String parkingSlot
-    ) {
+    public boolean addVehicle(String plate, String owner, String slot) {
 
-        if (licensePlate == null
-                || licensePlate.isBlank()) {
+        ValidationUtil.requirePlate(plate);
 
-            System.out.println(
-                    "Error: License plate cannot be empty."
-            );
+        plate = plate.toUpperCase();
 
+        if (vehicleMap.containsKey(plate)) {
+            System.out.println("Vehicle already exists.");
             return false;
         }
 
-        if (ownerName == null
-                || ownerName.isBlank()) {
+        VehicleNode vehicle = new VehicleNode(plate, owner, slot);
 
-            System.out.println(
-                    "Error: Owner name cannot be empty."
-            );
+        vehicleMap.put(plate, vehicle);
+        root = insert(root, vehicle);
 
-            return false;
-        }
-
-        if (parkingSlot == null
-                || parkingSlot.isBlank()) {
-
-            System.out.println(
-                    "Error: Parking slot cannot be empty."
-            );
-
-            return false;
-        }
-
-        String normalizedPlate =
-                licensePlate.trim().toUpperCase();
-
-        String normalizedOwner =
-                ownerName.trim();
-
-        String normalizedSlot =
-                parkingSlot.trim().toUpperCase();
-
-        if (vehicleMap.containsKey(normalizedPlate)) {
-
-            System.out.println(
-                    "Error: Vehicle "
-                            + normalizedPlate
-                            + " already exists."
-            );
-
-            return false;
-        }
-
-        VehicleNode vehicle =
-                new VehicleNode(
-                        normalizedPlate,
-                        normalizedOwner,
-                        normalizedSlot
-                );
-
-        vehicleMap.put(
-                normalizedPlate,
-                vehicle
-        );
-
-        root =
-                insertIntoBST(
-                        root,
-                        vehicle
-                );
-
-        System.out.println(
-                "Vehicle added to the "
-                        + "Optimizer System."
-        );
+        System.out.println("Vehicle added to Optimizer.");
 
         return true;
     }
 
-    private BSTNode insertIntoBST(
-            BSTNode node,
-            VehicleNode vehicle
-    ) {
+    private BSTNode insert(BSTNode node, VehicleNode vehicle) {
 
-        if (node == null) {
+        if (node == null)
             return new BSTNode(vehicle);
-        }
 
-        int comparison =
-                vehicle.getLicensePlate()
-                        .compareTo(
-                                node.getVehicle()
-                                        .getLicensePlate()
-                        );
+        if (vehicle.getLicensePlate().compareToIgnoreCase(node.vehicle.getLicensePlate()) < 0)
+            node.left = insert(node.left, vehicle);
 
-        if (comparison < 0) {
-
-            node.setLeft(
-                    insertIntoBST(
-                            node.getLeft(),
-                            vehicle
-                    )
-            );
-
-        } else if (comparison > 0) {
-
-            node.setRight(
-                    insertIntoBST(
-                            node.getRight(),
-                            vehicle
-                    )
-            );
-        }
+        else if (vehicle.getLicensePlate().compareToIgnoreCase(node.vehicle.getLicensePlate()) > 0)
+            node.right = insert(node.right, vehicle);
 
         return node;
     }
 
-    public VehicleNode searchVehicleFast(
-            String licensePlate
-    ) {
+    public VehicleNode searchVehicleFast(String plate) {
 
-        if (licensePlate == null
-                || licensePlate.isBlank()) {
+        ValidationUtil.requirePlate(plate);
 
-            System.out.println(
-                    "\nError: License plate "
-                            + "cannot be empty."
-            );
+        VehicleNode vehicle = vehicleMap.get(plate.toUpperCase());
 
+        if (vehicle == null) {
+            System.out.println("Vehicle not found.");
             return null;
         }
 
-        String normalizedPlate =
-                licensePlate.trim().toUpperCase();
+        System.out.println(vehicle);
 
-        VehicleNode found =
-                vehicleMap.get(normalizedPlate);
+        return vehicle;
+    }
 
-        if (found != null) {
+    public boolean contains(String plate) {
+        return vehicleMap.containsKey(plate.toUpperCase());
+    }
 
-            System.out.println(
-                    "\nVehicle Found!"
-            );
-
-            System.out.println(
-                    "License Plate: "
-                            + found.getLicensePlate()
-                            + " | Owner: "
-                            + found.getOwnerName()
-                            + " | Parking Slot: "
-                            + found.getParkingSlot()
-            );
-
-        } else {
-
-            System.out.println(
-                    "\nVehicle not found."
-            );
-        }
-
-        return found;
+    public int size() {
+        return vehicleMap.size();
     }
 
     public void displayVehiclesSorted() {
 
-        System.out.println(
-                "\n--- Vehicles Records "
-                        + "(Sorted Alphabetically) ---"
-        );
+        System.out.println("\n------ Sorted Vehicles ------");
 
-        if (root == null) {
+        if (root == null)
+            System.out.println("No vehicles.");
 
-            System.out.println(
-                    "No vehicles in the system."
-            );
+        else
+            inOrder(root);
 
-        } else {
-
-            inOrderTraversal(root);
-        }
+        System.out.println("-----------------------------");
     }
 
-    private void inOrderTraversal(
-            BSTNode node
-    ) {
+    private void inOrder(BSTNode node) {
 
-        if (node != null) {
+        if (node == null)
+            return;
 
-            inOrderTraversal(
-                    node.getLeft()
-            );
-
-            System.out.println(
-                    "License Plate: "
-                            + node.getVehicle()
-                            .getLicensePlate()
-                            + " | Owner: "
-                            + node.getVehicle()
-                            .getOwnerName()
-                            + " | Parking Slot: "
-                            + node.getVehicle()
-                            .getParkingSlot()
-            );
-
-            inOrderTraversal(
-                    node.getRight()
-            );
-        }
+        inOrder(node.left);
+        System.out.println(node.vehicle);
+        inOrder(node.right);
     }
 
-    public boolean removeVehicle(
-            String licensePlate
-    ) {
+    public void removeVehicle(String plate) {
 
-        if (licensePlate == null
-                || licensePlate.isBlank()) {
+        ValidationUtil.requirePlate(plate);
 
-            System.out.println(
-                    "Error: License plate "
-                            + "cannot be empty."
-            );
+        plate = plate.toUpperCase();
 
-            return false;
+        if (!vehicleMap.containsKey(plate)) {
+            System.out.println("Vehicle not found.");
+            return;
         }
 
-        String normalizedPlate =
-                licensePlate.trim().toUpperCase();
+        vehicleMap.remove(plate);
+        root = delete(root, plate);
 
-        if (!vehicleMap.containsKey(
-                normalizedPlate
-        )) {
-
-            System.out.println(
-                    "Vehicle does not exist."
-            );
-
-            return false;
-        }
-
-        vehicleMap.remove(
-                normalizedPlate
-        );
-
-        root =
-                deleteFromBST(
-                        root,
-                        normalizedPlate
-                );
-
-        System.out.println(
-                "Vehicle removed from the "
-                        + "Optimizer System."
-        );
-
-        return true;
+        System.out.println("Vehicle removed.");
     }
 
-    private BSTNode deleteFromBST(
-            BSTNode node,
-            String licensePlate
-    ) {
+    private BSTNode delete(BSTNode node, String plate) {
 
-        if (node == null) {
+        if (node == null)
             return null;
-        }
 
-        int comparison =
-                licensePlate.compareTo(
-                        node.getVehicle()
-                                .getLicensePlate()
-                );
+        int cmp = plate.compareToIgnoreCase(node.vehicle.getLicensePlate());
 
-        if (comparison < 0) {
+        if (cmp < 0)
+            node.left = delete(node.left, plate);
 
-            node.setLeft(
-                    deleteFromBST(
-                            node.getLeft(),
-                            licensePlate
-                    )
-            );
+        else if (cmp > 0)
+            node.right = delete(node.right, plate);
 
-        } else if (comparison > 0) {
+        else {
 
-            node.setRight(
-                    deleteFromBST(
-                            node.getRight(),
-                            licensePlate
-                    )
-            );
+            if (node.left == null)
+                return node.right;
 
-        } else {
+            if (node.right == null)
+                return node.left;
 
-            if (node.getLeft() == null) {
-                return node.getRight();
-            }
+            BSTNode min = findMin(node.right);
 
-            if (node.getRight() == null) {
-                return node.getLeft();
-            }
-
-            BSTNode minNode =
-                    findMin(
-                            node.getRight()
-                    );
-
-            node.setVehicle(
-                    minNode.getVehicle()
-            );
-
-            node.setRight(
-                    deleteFromBST(
-                            node.getRight(),
-                            minNode.getVehicle()
-                                    .getLicensePlate()
-                    )
-            );
+            node.vehicle = min.vehicle;
+            node.right = delete(node.right, min.vehicle.getLicensePlate());
         }
 
         return node;
     }
 
-    private BSTNode findMin(
-            BSTNode node
-    ) {
+    private BSTNode findMin(BSTNode node) {
 
-        while (node.getLeft() != null) {
-            node = node.getLeft();
-        }
+        while (node.left != null)
+            node = node.left;
 
         return node;
     }

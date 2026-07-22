@@ -1,37 +1,181 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
 
 public class ParkingGraph {
 
-    static class Edge {
+    /*====================================================
+                      EDGE CLASS
+    ====================================================*/
+    private static class Edge {
 
         private final String destination;
         private final int weight;
 
-        Edge(
-                String destination,
-                int weight
-        ) {
+        public Edge(String destination, int weight) {
             this.destination = destination;
             this.weight = weight;
         }
 
-        String getDestination() {
+        public String getDestination() {
             return destination;
         }
 
-        int getWeight() {
+        public int getWeight() {
             return weight;
         }
     }
+
+    /*====================================================
+                    DATA STRUCTURES
+    ====================================================*/
+
+    private final Map<String, List<Edge>> adjacencyList;
+    private final Set<String> availableParkingSlots;
+    private Map<String, String> previousNode;
+
+    public ParkingGraph() {
+
+        adjacencyList = new LinkedHashMap<>();
+        availableParkingSlots = new LinkedHashSet<>();
+        previousNode = new HashMap<>();
+
+    }
+
+    /*====================================================
+                    GRAPH CREATION
+    ====================================================*/
+
+    public void addNode(String node) {
+
+        ValidationUtil.requireText(node, "Node");
+
+        adjacencyList.putIfAbsent(node, new ArrayList<>());
+    }
+
+    public boolean containsNode(String node) {
+        return adjacencyList.containsKey(node);
+    }
+
+    public void addEdge(String source, String destination, int weight) {
+
+        ValidationUtil.requireText(source, "Source");
+        ValidationUtil.requireText(destination, "Destination");
+
+        if (weight <= 0)
+            throw new IllegalArgumentException("Weight must be greater than zero.");
+
+        addNode(source);
+        addNode(destination);
+
+        if (!edgeExists(source, destination)) {
+            adjacencyList.get(source).add(new Edge(destination, weight));
+            adjacencyList.get(destination).add(new Edge(source, weight));
+        }
+    }
+
+    private boolean edgeExists(String source, String destination) {
+
+        List<Edge> edges = adjacencyList.get(source);
+
+        if (edges == null)
+            return false;
+
+        for (Edge edge : edges) {
+
+            if (edge.getDestination().equalsIgnoreCase(destination))
+                return true;
+        }
+
+        return false;
+    }
+
+    /*====================================================
+                PARKING SLOT MANAGEMENT
+    ====================================================*/
+
+    public void markSlotAvailable(String slot) {
+
+        if (!containsNode(slot))
+            addNode(slot);
+
+        availableParkingSlots.add(slot);
+
+        System.out.println("[AVAILABLE] " + slot);
+    }
+
+    public void markSlotOccupied(String slot) {
+
+        availableParkingSlots.remove(slot);
+
+        System.out.println("[OCCUPIED] " + slot);
+    }
+
+    public boolean isAvailable(String slot) {
+        return availableParkingSlots.contains(slot);
+    }
+
+    public int getAvailableSlotCount() {
+        return availableParkingSlots.size();
+    }
+
+    public Set<String> getAvailableSlots() {
+        return new HashSet<>(availableParkingSlots);
+    }
+
+    /*====================================================
+                    DIJKSTRA
+    ====================================================*/
+
+    public Map<String, Integer> dijkstra(String source) {
+
+        ValidationUtil.requireText(source, "Source");
+
+        if (!containsNode(source))
+            throw new IllegalArgumentException("Source node not found.");
+
+        previousNode.clear();
+
+        Map<String, Integer> distance = new HashMap<>();
+
+        for (String node : adjacencyList.keySet()) {
+            distance.put(node, Integer.MAX_VALUE);
+        }
+
+        distance.put(source, 0);
+
+        PriorityQueue<NodeDistance> pq = new PriorityQueue<>();
+
+        pq.offer(new NodeDistance(source, 0));
+
+        while (!pq.isEmpty()) {
+
+            NodeDistance current = pq.poll();
+
+            if (current.distance > distance.get(current.node))
+                continue;
+
+            for (Edge edge : adjacencyList.get(current.node)) {
+
+                int newDistance = current.distance + edge.getWeight();
+
+                if (newDistance < distance.get(edge.getDestination())) {
+
+                    distance.put(edge.getDestination(), newDistance);
+
+                    previousNode.put(edge.getDestination(), current.node);
+
+                    pq.offer(new NodeDistance(
+                            edge.getDestination(),
+                            newDistance));
+                }
+            }
+        }
+
+        return distance;
+    }
+
+    /*====================================================
+            PRIORITY QUEUE HELPER CLASS
+    ====================================================*/
 
     private static class NodeDistance
             implements Comparable<NodeDistance> {
@@ -39,663 +183,301 @@ public class ParkingGraph {
         private final String node;
         private final int distance;
 
-        NodeDistance(
-                String node,
-                int distance
-        ) {
+        public NodeDistance(String node, int distance) {
             this.node = node;
             this.distance = distance;
         }
 
         @Override
-        public int compareTo(
-                NodeDistance other
-        ) {
-            return Integer.compare(
-                    this.distance,
-                    other.distance
-            );
+        public int compareTo(NodeDistance other) {
+            return Integer.compare(distance, other.distance);
         }
     }
 
-    private final Map<String, List<Edge>>
-            adjacencyList;
+        /*====================================================
+                PATH RECONSTRUCTION
+    ====================================================*/
 
-    private final Set<String>
-            availableParkingSlots;
+    public List<String> getPath(String source, String destination) {
 
-    private Map<String, String>
-            lastPrev;
+        LinkedList<String> path = new LinkedList<>();
 
-    public ParkingGraph() {
+        if (!containsNode(source) || !containsNode(destination))
+            return path;
 
-        adjacencyList =
-                new HashMap<>();
-
-        availableParkingSlots =
-                new HashSet<>();
-
-        lastPrev =
-                new HashMap<>();
-    }
-
-    public boolean addNode(
-            String node
-    ) {
-
-        if (node == null
-                || node.isBlank()) {
-
-            System.out.println(
-                    "Error: Node name "
-                            + "cannot be null or empty."
-            );
-
-            return false;
-        }
-
-        String normalizedNode =
-                node.trim().toUpperCase();
-
-        if (adjacencyList.containsKey(
-                normalizedNode
-        )) {
-
-            System.out.println(
-                    "Error: Node "
-                            + normalizedNode
-                            + " already exists."
-            );
-
-            return false;
-        }
-
-        adjacencyList.put(
-                normalizedNode,
-                new ArrayList<>()
-        );
-
-        return true;
-    }
-
-    public boolean addEdge(
-            String source,
-            String destination,
-            int weight
-    ) {
-
-        if (source == null
-                || source.isBlank()
-                || destination == null
-                || destination.isBlank()) {
-
-            System.out.println(
-                    "Error: Node names "
-                            + "cannot be null or empty."
-            );
-
-            return false;
-        }
-
-        if (weight <= 0) {
-
-            System.out.println(
-                    "Error: Edge weight "
-                            + "must be greater than 0."
-            );
-
-            return false;
-        }
-
-        String normalizedSource =
-                source.trim().toUpperCase();
-
-        String normalizedDestination =
-                destination.trim().toUpperCase();
-
-        adjacencyList.putIfAbsent(
-                normalizedSource,
-                new ArrayList<>()
-        );
-
-        adjacencyList.putIfAbsent(
-                normalizedDestination,
-                new ArrayList<>()
-        );
-
-        boolean edgeExists =
-                adjacencyList
-                        .get(normalizedSource)
-                        .stream()
-                        .anyMatch(
-                                edge ->
-                                        edge.getDestination()
-                                                .equals(
-                                                        normalizedDestination
-                                                )
-                        );
-
-        if (edgeExists) {
-
-            System.out.println(
-                    "Error: Edge between "
-                            + normalizedSource
-                            + " and "
-                            + normalizedDestination
-                            + " already exists."
-            );
-
-            return false;
-        }
-
-        adjacencyList
-                .get(normalizedSource)
-                .add(
-                        new Edge(
-                                normalizedDestination,
-                                weight
-                        )
-                );
-
-        adjacencyList
-                .get(normalizedDestination)
-                .add(
-                        new Edge(
-                                normalizedSource,
-                                weight
-                        )
-                );
-
-        return true;
-    }
-
-    public boolean markSlotAvailable(
-            String parkingNode
-    ) {
-
-        if (parkingNode == null
-                || parkingNode.isBlank()) {
-
-            System.out.println(
-                    "Error: Parking node "
-                            + "cannot be null or empty."
-            );
-
-            return false;
-        }
-
-        String normalizedNode =
-                parkingNode.trim().toUpperCase();
-
-        if (!adjacencyList.containsKey(
-                normalizedNode
-        )) {
-
-            System.out.println(
-                    "Error: Parking node "
-                            + normalizedNode
-                            + " does not exist "
-                            + "in the graph."
-            );
-
-            return false;
-        }
-
-        if (availableParkingSlots.contains(
-                normalizedNode
-        )) {
-
-            System.out.println(
-                    "[Slot] Warning: "
-                            + normalizedNode
-                            + " is already AVAILABLE."
-            );
-
-            return false;
-        }
-
-        availableParkingSlots.add(
-                normalizedNode
-        );
-
-        System.out.println(
-                "[Slot] "
-                        + normalizedNode
-                        + " is now AVAILABLE."
-        );
-
-        return true;
-    }
-
-    public boolean markSlotOccupied(
-            String parkingNode
-    ) {
-
-        if (parkingNode == null
-                || parkingNode.isBlank()) {
-
-            System.out.println(
-                    "Error: Parking node "
-                            + "cannot be null or empty."
-            );
-
-            return false;
-        }
-
-        String normalizedNode =
-                parkingNode.trim().toUpperCase();
-
-        if (!availableParkingSlots.contains(
-                normalizedNode
-        )) {
-
-            System.out.println(
-                    "[Slot] Error: "
-                            + normalizedNode
-                            + " is not currently AVAILABLE."
-            );
-
-            return false;
-        }
-
-        availableParkingSlots.remove(
-                normalizedNode
-        );
-
-        System.out.println(
-                "[Slot] "
-                        + normalizedNode
-                        + " is now OCCUPIED."
-        );
-
-        return true;
-    }
-
-    public boolean isAvailable(
-            String parkingNode
-    ) {
-
-        if (parkingNode == null
-                || parkingNode.isBlank()) {
-
-            return false;
-        }
-
-        return availableParkingSlots.contains(
-                parkingNode.trim().toUpperCase()
-        );
-    }
-
-    public Map<String, Integer> dijkstra(
-            String source
-    ) {
-
-        Map<String, Integer> distances =
-                new HashMap<>();
-
-        Map<String, String> previous =
-                new HashMap<>();
-
-        for (String node :
-                adjacencyList.keySet()) {
-
-            distances.put(
-                    node,
-                    Integer.MAX_VALUE
-            );
-
-            previous.put(
-                    node,
-                    null
-            );
-        }
-
-        if (source == null
-                || source.isBlank()) {
-
-            System.out.println(
-                    "Error: Source node "
-                            + "cannot be empty."
-            );
-
-            lastPrev = previous;
-
-            return distances;
-        }
-
-        String normalizedSource =
-                source.trim().toUpperCase();
-
-        if (!adjacencyList.containsKey(
-                normalizedSource
-        )) {
-
-            System.out.println(
-                    "Error: Source node '"
-                            + normalizedSource
-                            + "' does not exist."
-            );
-
-            lastPrev = previous;
-
-            return distances;
-        }
-
-        PriorityQueue<NodeDistance>
-                priorityQueue =
-                new PriorityQueue<>();
-
-        Set<String> visited =
-                new HashSet<>();
-
-        distances.put(
-                normalizedSource,
-                0
-        );
-
-        priorityQueue.offer(
-                new NodeDistance(
-                        normalizedSource,
-                        0
-                )
-        );
-
-        while (!priorityQueue.isEmpty()) {
-
-            NodeDistance current =
-                    priorityQueue.poll();
-
-            if (visited.contains(
-                    current.node
-            )) {
-
-                continue;
-            }
-
-            visited.add(
-                    current.node
-            );
-
-            List<Edge> neighbours =
-                    adjacencyList.getOrDefault(
-                            current.node,
-                            Collections.emptyList()
-                    );
-
-            for (Edge edge :
-                    neighbours) {
-
-                if (visited.contains(
-                        edge.getDestination()
-                )) {
-
-                    continue;
-                }
-
-                int newDistance =
-                        current.distance
-                                + edge.getWeight();
-
-                if (newDistance
-                        < distances.get(
-                        edge.getDestination()
-                )) {
-
-                    distances.put(
-                            edge.getDestination(),
-                            newDistance
-                    );
-
-                    previous.put(
-                            edge.getDestination(),
-                            current.node
-                    );
-
-                    priorityQueue.offer(
-                            new NodeDistance(
-                                    edge.getDestination(),
-                                    newDistance
-                            )
-                    );
-                }
-            }
-        }
-
-        lastPrev = previous;
-
-        return distances;
-    }
-
-    public List<String> getPath(
-            String source,
-            String destination
-    ) {
-
-        if (source == null
-                || destination == null) {
-
-            return Collections.emptyList();
-        }
-
-        String normalizedSource =
-                source.trim().toUpperCase();
-
-        String normalizedDestination =
-                destination.trim().toUpperCase();
-
-        LinkedList<String> path =
-                new LinkedList<>();
-
-        String current =
-                normalizedDestination;
+        String current = destination;
 
         while (current != null) {
-
-            path.addFirst(
-                    current
-            );
-
-            current =
-                    lastPrev.get(
-                            current
-                    );
+            path.addFirst(current);
+            current = previousNode.get(current);
         }
 
-        if (path.isEmpty()
-                || !path.getFirst()
-                .equals(
-                        normalizedSource
-                )) {
-
-            return Collections.emptyList();
-        }
+        if (path.isEmpty() || !path.getFirst().equals(source))
+            return new ArrayList<>();
 
         return path;
     }
 
-    public void navigateToNearestSlot(
-            String driverLocation
-    ) {
+    /*====================================================
+                  NAVIGATION SYSTEM
+    ====================================================*/
 
-        if (driverLocation == null
-                || driverLocation.isBlank()) {
+    public void navigateToNearestSlot(String source) {
 
-            System.out.println(
-                    "[Navigator] Invalid "
-                            + "driver location."
-            );
-
-            return;
-        }
-
-        String normalizedLocation =
-                driverLocation.trim()
-                        .toUpperCase();
-
-        System.out.println(
-                "\n[Navigator] Searching for "
-                        + "nearest available slot from: "
-                        + normalizedLocation
-        );
+        ValidationUtil.requireText(source, "Source");
 
         if (availableParkingSlots.isEmpty()) {
-
-            System.out.println(
-                    "[Navigator] No available "
-                            + "parking slots at this time."
-            );
-
+            System.out.println("\nNo parking slots available.");
             return;
         }
 
-        Map<String, Integer> distances =
-                dijkstra(
-                        normalizedLocation
-                );
+        Map<String, Integer> distance = dijkstra(source);
 
         String bestSlot = null;
+        int shortestDistance = Integer.MAX_VALUE;
 
-        int bestDistance =
-                Integer.MAX_VALUE;
+        for (String slot : availableParkingSlots) {
 
-        for (String slot :
-                availableParkingSlots) {
+            int currentDistance =
+                    distance.getOrDefault(slot, Integer.MAX_VALUE);
 
-            int distance =
-                    distances.getOrDefault(
-                            slot,
-                            Integer.MAX_VALUE
-                    );
-
-            if (distance
-                    < bestDistance) {
-
-                bestDistance =
-                        distance;
-
-                bestSlot =
-                        slot;
+            if (currentDistance < shortestDistance) {
+                shortestDistance = currentDistance;
+                bestSlot = slot;
             }
         }
 
-        if (bestSlot == null
-                || bestDistance
-                == Integer.MAX_VALUE) {
+        if (bestSlot == null) {
+            System.out.println("\nNo reachable parking slot found.");
+            return;
+        }
 
-            System.out.println(
-                    "[Navigator] No reachable "
-                            + "parking slot found."
-            );
+        List<String> route = getPath(source, bestSlot);
+
+        System.out.println("\n========== SMART NAVIGATION ==========");
+        System.out.println("Start Location : " + source);
+        System.out.println("Assigned Slot  : " + bestSlot);
+        System.out.println("Distance       : " + shortestDistance + " m");
+        System.out.println("Route          : " + String.join(" -> ", route));
+        System.out.println("======================================");
+    }
+
+    /*====================================================
+                    DISPLAY GRAPH
+    ====================================================*/
+    public void navigateToSlot(String source, String destination) {
+
+
+        Map<String,Integer> distance = dijkstra(source);
+
+
+        List<String> route = getPath(
+                source,
+                destination
+        );
+
+
+        if(route.isEmpty()) {
+
+            System.out.println("No route available.");
 
             return;
         }
 
-        List<String> path =
-                getPath(
-                        normalizedLocation,
-                        bestSlot
-                );
+
+
+        System.out.println("\n========== SMART NAVIGATION ==========");
 
         System.out.println(
-                "[Navigator] Nearest available slot: "
-                        + bestSlot
+                "Start Location : "
+                        + source
         );
 
-        System.out.println(
-                "[Navigator] Total distance/cost: "
-                        + bestDistance
-                        + " units"
-        );
 
         System.out.println(
-                "[Navigator] Recommended route: "
-                        + String.join(
-                        " --> ",
-                        path
-                )
+                "Destination   : "
+                        + destination
         );
+
+
+        System.out.println(
+                "Distance      : "
+                        + distance.get(destination)
+                        + " m"
+        );
+
+
+        System.out.println(
+                "Route         : "
+                        + String.join(" -> ",route)
+        );
+
+
+        System.out.println(
+                "======================================"
+        );
+
     }
 
     public void displayGraph() {
 
-        System.out.println(
-                "\n Parking Location Graph "
-                        + "(Adjacency List) "
-        );
+        System.out.println("\n========== CAMPUS MAP ==========");
 
-        for (
-                Map.Entry<
-                        String,
-                        List<Edge>
-                        > entry
-                : adjacencyList.entrySet()
-        ) {
+        for (String node : adjacencyList.keySet()) {
 
-            System.out.print(
-                    "  "
-                            + entry.getKey()
-                            + " : "
-            );
+            System.out.print(node + " -> ");
 
-            List<String> neighbours =
-                    new ArrayList<>();
+            List<String> neighbours = new ArrayList<>();
 
-            for (Edge edge :
-                    entry.getValue()) {
+            for (Edge edge : adjacencyList.get(node)) {
 
                 neighbours.add(
                         edge.getDestination()
                                 + "("
                                 + edge.getWeight()
-                                + ")"
-                );
+                                + "m)");
             }
 
-            System.out.println(
-                    String.join(
-                            ", ",
-                            neighbours
-                    )
-            );
+            System.out.println(String.join(", ", neighbours));
         }
 
-        System.out.println(
-                "--------------------------------------------------\n"
-        );
+        System.out.println("================================\n");
     }
 
-    public void displayAllDistances(
-            String source
-    ) {
+    /*====================================================
+                DISPLAY DISTANCES
+    ====================================================*/
 
-        Map<String, Integer> distances =
-                dijkstra(source);
+    public void displayAllDistances(String source) {
 
-        System.out.println(
-                "\n Shortest Distances from ["
-                        + source
-                        + "] "
-        );
+        Map<String, Integer> distance = dijkstra(source);
 
-        distances.entrySet()
+        System.out.println("\nShortest Distance from " + source);
+
+        distance.entrySet()
                 .stream()
-                .sorted(
-                        Map.Entry.comparingByValue()
-                )
-                .forEach(
-                        entry ->
-                                System.out.printf(
-                                        "  %-20s --> %d units%n",
-                                        entry.getKey(),
-                                        entry.getValue()
-                                                == Integer.MAX_VALUE
-                                                ? -1
-                                                : entry.getValue()
-                                )
-                );
+                .sorted(Map.Entry.comparingByValue())
+                .forEach(entry -> {
 
-        System.out.println(
-                "----------------------------------------------------\n"
-        );
+                    int value = entry.getValue();
+
+                    if (value == Integer.MAX_VALUE)
+                        System.out.println(
+                                entry.getKey()
+                                        + " : Unreachable");
+
+                    else
+                        System.out.println(
+                                entry.getKey()
+                                        + " : "
+                                        + value
+                                        + " m");
+                });
+
+        System.out.println();
+    }
+
+    /*====================================================
+                    UTILITY METHODS
+    ====================================================*/
+
+    public int getNumberOfNodes() {
+        return adjacencyList.size();
+    }
+
+    public boolean hasAvailableSlots() {
+        return !availableParkingSlots.isEmpty();
+    }
+
+    public void displayAvailableSlots() {
+
+        System.out.println("\nAvailable Slots");
+
+        if (availableParkingSlots.isEmpty()) {
+            System.out.println("None");
+            return;
+        }
+
+        for (String slot : availableParkingSlots) {
+            System.out.println("- " + slot);
+        }
+    }
+
+    /*====================================================
+                        DEMO
+    ====================================================*/
+
+    public static void main(String[] args) {
+
+        ParkingGraph graph = new ParkingGraph();
+
+        graph.addEdge("Main_Gate",
+                "Central_Roundabout", 10);
+
+        graph.addEdge("Central_Roundabout",
+                "North_Wing", 15);
+
+        graph.addEdge("Central_Roundabout",
+                "East_Wing", 25);
+
+        graph.addEdge("North_Wing",
+                "Slot_N1", 5);
+
+        graph.addEdge("North_Wing",
+                "Slot_N2", 10);
+
+        graph.addEdge("East_Wing",
+                "Slot_E1", 5);
+
+        graph.markSlotAvailable("Slot_N1");
+        graph.markSlotAvailable("Slot_N2");
+        graph.markSlotAvailable("Slot_E1");
+
+        graph.displayGraph();
+
+        graph.displayAvailableSlots();
+
+        graph.displayAllDistances("Main_Gate");
+
+        graph.navigateToNearestSlot("Main_Gate");
+
+        graph.markSlotOccupied("Slot_N1");
+
+        graph.navigateToNearestSlot("Main_Gate");
+    }
+
+    public void displayParkingStatus() {
+
+        System.out.println("\n========== PARKING STATUS ==========");
+
+        int total = 0;
+        int available = availableParkingSlots.size();
+
+        for(String node : adjacencyList.keySet()) {
+
+            if(node.startsWith("Slot")) {
+
+                total++;
+
+                String status;
+
+                if(availableParkingSlots.contains(node)) {
+                    status = "AVAILABLE";
+                }
+                else {
+                    status = "OCCUPIED";
+                }
+
+                System.out.println(
+                        node + " : " + status
+                );
+            }
+        }
+
+        System.out.println("-------------------------------");
+        System.out.println("Total Slots     : " + total);
+        System.out.println("Available Slots : " + available);
+        System.out.println("Occupied Slots  : " + (total - available));
+        System.out.println("===================================");
     }
 }

@@ -1,42 +1,21 @@
-import java.util.HashSet;
 import java.util.PriorityQueue;
-import java.util.Set;
 
-class ParkingSlot
-        implements Comparable<ParkingSlot> {
+class ParkingSlot implements Comparable<ParkingSlot> {
 
     private final String slotId;
     private final int distance;
     private boolean available;
 
-    public ParkingSlot(
-            String slotId,
-            int distance
-    ) {
+    public ParkingSlot(String slotId, int distance) {
 
-        if (slotId == null
-                || slotId.isBlank()) {
+        ValidationUtil.requireText(slotId, "Parking Slot");
 
-            throw new IllegalArgumentException(
-                    "Slot ID cannot be null or empty."
-            );
-        }
+        if (distance < 0)
+            throw new IllegalArgumentException("Distance cannot be negative.");
 
-        if (distance < 0) {
-
-            throw new IllegalArgumentException(
-                    "Distance cannot be negative."
-            );
-        }
-
-        this.slotId =
-                slotId.trim().toUpperCase();
-
-        this.distance =
-                distance;
-
-        this.available =
-                true;
+        this.slotId = slotId;
+        this.distance = distance;
+        this.available = true;
     }
 
     public String getSlotId() {
@@ -51,208 +30,108 @@ class ParkingSlot
         return available;
     }
 
-    public void setAvailable(
-            boolean available
-    ) {
+    public void setAvailable(boolean available) {
         this.available = available;
     }
 
     @Override
-    public int compareTo(
-            ParkingSlot other
-    ) {
-
-        return Integer.compare(
-                this.distance,
-                other.distance
-        );
+    public int compareTo(ParkingSlot other) {
+        return Integer.compare(this.distance, other.distance);
     }
 
     @Override
     public String toString() {
-
-        return "Slot "
-                + slotId
-                + " (Distance: "
-                + distance
-                + "m)";
+        return slotId + " (" + distance + "m)";
     }
 }
 
 public class ParkingSlotAssignment {
 
-    private final PriorityQueue<ParkingSlot>
-            availableSlots;
-
-    private final Set<String>
-            allSlotIds;
-
-    private final Set<String>
-            availableSlotIds;
+    private final PriorityQueue<ParkingSlot> availableSlots;
 
     public ParkingSlotAssignment() {
-
-        availableSlots =
-                new PriorityQueue<>();
-
-        allSlotIds =
-                new HashSet<>();
-
-        availableSlotIds =
-                new HashSet<>();
+        availableSlots = new PriorityQueue<>();
     }
 
-    public boolean addParkingSlot(
-            ParkingSlot slot
-    ) {
+    public boolean addParkingSlot(ParkingSlot slot) {
 
-        if (slot == null) {
-
-            System.out.println(
-                    "Error: Cannot add a null slot."
-            );
-
+        if (slot == null)
             return false;
-        }
 
-        if (allSlotIds.contains(
-                slot.getSlotId()
-        )) {
-
-            System.out.println(
-                    "Error: Slot "
-                            + slot.getSlotId()
-                            + " is already registered."
-            );
-
+        if (!slot.isAvailable())
             return false;
-        }
 
-        allSlotIds.add(
-                slot.getSlotId()
-        );
+        if (contains(slot.getSlotId()))
+            return false;
 
-        availableSlots.add(
-                slot
-        );
-
-        availableSlotIds.add(
-                slot.getSlotId()
-        );
-
-        System.out.println(
-                "Slot "
-                        + slot.getSlotId()
-                        + " added to the parking pool."
-        );
-
+        availableSlots.offer(slot);
         return true;
     }
 
     public ParkingSlot assignSlot() {
 
         if (availableSlots.isEmpty()) {
-
-            System.out.println(
-                    "Assignment Failed: "
-                            + "No available parking slots!"
-            );
-
+            System.out.println("No parking slots available.");
             return null;
         }
 
-        ParkingSlot assignedSlot =
-                availableSlots.poll();
+        ParkingSlot slot = availableSlots.poll();
+        slot.setAvailable(false);
 
-        availableSlotIds.remove(
-                assignedSlot.getSlotId()
-        );
+        System.out.println("Assigned : " + slot);
 
-        assignedSlot.setAvailable(
-                false
-        );
-
-        System.out.println(
-                "Successfully Assigned: "
-                        + assignedSlot
-        );
-
-        return assignedSlot;
+        return slot;
     }
 
-    public boolean releaseSlot(
-            ParkingSlot slot
-    ) {
+    public void releaseSlot(ParkingSlot slot) {
 
-        if (slot == null) {
+        if (slot == null)
+            return;
 
-            System.out.println(
-                    "Error: Cannot release "
-                            + "a null slot."
-            );
+        if (slot.isAvailable())
+            return;
 
-            return false;
-        }
+        slot.setAvailable(true);
+        availableSlots.offer(slot);
 
-        if (!allSlotIds.contains(
-                slot.getSlotId()
-        )) {
-
-            System.out.println(
-                    "Error: Slot "
-                            + slot.getSlotId()
-                            + " was never registered."
-            );
-
-            return false;
-        }
-
-        if (availableSlotIds.contains(
-                slot.getSlotId()
-        )) {
-
-            System.out.println(
-                    "Error: Slot "
-                            + slot.getSlotId()
-                            + " is already available."
-            );
-
-            return false;
-        }
-
-        slot.setAvailable(
-                true
-        );
-
-        availableSlots.add(
-                slot
-        );
-
-        availableSlotIds.add(
-                slot.getSlotId()
-        );
-
-        System.out.println(
-                "Slot Released & Returned "
-                        + "to Priority Pool: "
-                        + slot.getSlotId()
-        );
-
-        return true;
+        System.out.println("Released : " + slot.getSlotId());
     }
 
-    public boolean isSlotAvailable(
-            String slotId
-    ) {
+    public ParkingSlot peekNextSlot() {
+        return availableSlots.peek();
+    }
 
-        if (slotId == null
-                || slotId.isBlank()) {
+    public boolean isEmpty() {
+        return availableSlots.isEmpty();
+    }
 
-            return false;
+    public int size() {
+        return availableSlots.size();
+    }
+
+    public boolean contains(String slotId) {
+
+        for (ParkingSlot slot : availableSlots) {
+            if (slot.getSlotId().equalsIgnoreCase(slotId))
+                return true;
         }
 
-        return availableSlotIds.contains(
-                slotId.trim().toUpperCase()
-        );
+        return false;
+    }
+
+    public void displayAvailableSlots() {
+
+        System.out.println("\n------ Available Parking Slots ------");
+
+        if (availableSlots.isEmpty()) {
+            System.out.println("No available slots.");
+        } else {
+
+            for (ParkingSlot slot : availableSlots) {
+                System.out.println(slot);
+            }
+        }
+
+        System.out.println("-------------------------------------");
     }
 }

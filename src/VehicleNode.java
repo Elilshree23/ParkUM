@@ -3,14 +3,16 @@ public class VehicleNode {
     private final String licensePlate;
     private final String ownerName;
     private final String parkingSlot;
-    private VehicleNode next;
 
-    public VehicleNode(
-            String licensePlate,
-            String ownerName,
-            String parkingSlot
-    ) {
-        this.licensePlate = licensePlate;
+    VehicleNode next;
+
+    public VehicleNode(String licensePlate, String ownerName, String parkingSlot) {
+
+        ValidationUtil.requirePlate(licensePlate);
+        ValidationUtil.requireText(ownerName, "Owner name");
+        ValidationUtil.requireText(parkingSlot, "Parking slot");
+
+        this.licensePlate = licensePlate.toUpperCase();
         this.ownerName = ownerName;
         this.parkingSlot = parkingSlot;
         this.next = null;
@@ -28,11 +30,10 @@ public class VehicleNode {
         return parkingSlot;
     }
 
-    public VehicleNode getNext() {
-        return next;
-    }
-
-    public void setNext(VehicleNode next) {
-        this.next = next;
+    @Override
+    public String toString() {
+        return "License Plate: " + licensePlate
+                + " | Owner: " + ownerName
+                + " | Parking Slot: " + parkingSlot;
     }
 }

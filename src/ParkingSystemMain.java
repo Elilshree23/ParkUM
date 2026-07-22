@@ -1,59 +1,37 @@
 public class ParkingSystemMain {
 
-    public static void main(
-            String[] args
-    ) {
+    private static void printPhase(String title) {
+        System.out.println();
+        System.out.println("======================================================");
+        System.out.println(title);
+        System.out.println("======================================================\n");
+    }
 
-        System.out.println(
-                "======================================================"
-        );
 
-        System.out.println(
-                "   UNIVERSITI MALAYA SMART PARKING MANAGEMENT SYSTEM  "
-        );
+    public static void main(String[] args) {
 
-        System.out.println(
-                "======================================================\n"
-        );
+        System.out.println("======================================================");
+        System.out.println("   UNIVERSITI MALAYA SMART PARKING MANAGEMENT SYSTEM  ");
+        System.out.println("======================================================\n");
 
-        System.out.println(
-                "---PHASE 1: INITIALIZING SYSTEMS "
-                        + "AND MAP LAYOUT---\n"
-        );
 
-        VehicleManagementSystem coreSystem =
-                new VehicleManagementSystem();
+        printPhase("PHASE 1 : INITIALIZING SYSTEMS AND MAP LAYOUT");
 
-        VehicleQueue trafficQueue =
-                new VehicleQueue();
 
-        UndoStack actionHistory =
-                new UndoStack();
+        VehicleManagementSystem coreSystem = new VehicleManagementSystem();
+        VehicleQueue trafficQueue = new VehicleQueue();
+        UndoStack actionHistory = new UndoStack();
+        ParkingGraph campusMap = new ParkingGraph();
+        VehicleSearchSystem searchSystem = new VehicleSearchSystem();
+        ParkingSlotAssignment prioritizer = new ParkingSlotAssignment();
 
-        ParkingGraph campusMap =
-                new ParkingGraph();
 
-        VehicleSearchSystem searchSystem =
-                new VehicleSearchSystem();
 
-        ParkingSlotAssignment prioritizer =
-                new ParkingSlotAssignment();
+        campusMap.addNode("Main_Gate");
+        campusMap.addNode("Central_Roundabout");
+        campusMap.addNode("North_Wing");
+        campusMap.addNode("East_Wing");
 
-        campusMap.addNode(
-                "Main_Gate"
-        );
-
-        campusMap.addNode(
-                "Central_Roundabout"
-        );
-
-        campusMap.addNode(
-                "North_Wing"
-        );
-
-        campusMap.addNode(
-                "East_Wing"
-        );
 
         campusMap.addEdge(
                 "Main_Gate",
@@ -91,380 +69,294 @@ public class ParkingSystemMain {
                 5
         );
 
+
         campusMap.displayGraph();
+        campusMap.displayAllDistances("Main_Gate");
 
-        campusMap.displayAllDistances(
-                "Main_Gate"
-        );
 
-        ParkingSlot slotN1 =
-                new ParkingSlot(
-                        "Slot_N1",
-                        30
-                );
 
-        ParkingSlot slotN2 =
-                new ParkingSlot(
-                        "Slot_N2",
-                        35
-                );
+        ParkingSlot slotN1 = new ParkingSlot("Slot_N1", 30);
+        ParkingSlot slotN2 = new ParkingSlot("Slot_N2", 35);
+        ParkingSlot slotE1 = new ParkingSlot("Slot_E1", 40);
 
-        ParkingSlot slotE1 =
-                new ParkingSlot(
-                        "Slot_E1",
-                        40
-                );
 
-        prioritizer.addParkingSlot(
-                slotN1
-        );
 
-        prioritizer.addParkingSlot(
-                slotN2
-        );
+        prioritizer.addParkingSlot(slotN1);
+        prioritizer.addParkingSlot(slotN2);
+        prioritizer.addParkingSlot(slotE1);
 
-        prioritizer.addParkingSlot(
-                slotE1
-        );
 
-        campusMap.markSlotAvailable(
-                "Slot_N1"
-        );
 
-        campusMap.markSlotAvailable(
-                "Slot_N2"
-        );
+        campusMap.markSlotAvailable("Slot_N1");
+        campusMap.markSlotAvailable("Slot_N2");
+        campusMap.markSlotAvailable("Slot_E1");
 
-        campusMap.markSlotAvailable(
-                "Slot_E1"
-        );
 
-        System.out.println(
-                "\n---PHASE 2: VEHICLE ARRIVING "
-                        + "AT MAIN GATE---\n"
-        );
 
-        trafficQueue.enqueue(
-                "WUV8888"
-        );
+        printPhase("PHASE 2 : VEHICLE ARRIVAL AND QUEUEING");
 
-        trafficQueue.enqueue(
-                "BND2020"
-        );
 
-        trafficQueue.enqueue(
-                "JQA1234"
-        );
+        trafficQueue.enqueue("WUV8888");
+        trafficQueue.enqueue("BND2020");
+        trafficQueue.enqueue("JQA1234");
+
 
         trafficQueue.displayQueue();
 
-        System.out.println(
-                "\n---PHASE 3: PROCESSING "
-                        + "THE FIRST VEHICLE---\n"
-        );
 
-        String car1 =
-                trafficQueue.dequeue();
 
-        String owner1 =
-                "Ali";
+        printPhase("PHASE 3 : PROCESSING FIRST VEHICLE");
+
+
+        String car1 = trafficQueue.dequeue();
+        String owner1 = "Ali";
+
 
         if (car1 != null) {
 
-            ParkingSlot assignedSlot =
-                    prioritizer.assignSlot();
+
+            ParkingSlot assignedSlot = prioritizer.assignSlot();
+
 
             if (assignedSlot != null) {
 
-                String slotId =
-                        assignedSlot.getSlotId();
 
-                campusMap.navigateToNearestSlot(
-                        "Main_Gate"
+                String slotId = assignedSlot.getSlotId();
+
+
+                campusMap.navigateToSlot(
+                        "Main_Gate",
+                        slotId
                 );
 
-                System.out.println(
-                        "\n---PHASE 4: REGISTRATION---\n"
+
+                printPhase("PHASE 4 : VEHICLE REGISTRATION");
+
+
+                coreSystem.addVehicle(
+                        car1,
+                        owner1,
+                        slotId
                 );
 
-                boolean addedToCore =
-                        coreSystem.addVehicle(
-                                car1,
-                                owner1,
-                                slotId
-                        );
 
-                if (addedToCore) {
+                searchSystem.addVehicle(
+                        car1,
+                        owner1,
+                        slotId
+                );
 
-                    boolean addedToSearch =
-                            searchSystem.addVehicle(
-                                    car1,
-                                    owner1,
-                                    slotId
-                            );
 
-                    if (addedToSearch) {
+                campusMap.markSlotOccupied(slotId);
 
-                        boolean slotOccupied =
-                                campusMap.markSlotOccupied(
-                                        slotId
-                                );
 
-                        if (slotOccupied) {
+                actionHistory.pushAction(
+                        ActionType.ADD,
+                        car1,
+                        owner1,
+                        slotId
+                );
 
-                            actionHistory.pushAction(
-                                    ActionType.ADD,
-                                    car1,
-                                    owner1,
-                                    slotId
-                            );
-
-                        } else {
-
-                            System.out.println(
-                                    "Error: Slot state update failed."
-                            );
-                        }
-
-                    } else {
-
-                        System.out.println(
-                                "Error: Search system "
-                                        + "rejected vehicle."
-                        );
-                    }
-
-                } else {
-
-                    System.out.println(
-                            "Skipping registration — "
-                                    + "vehicle rejected."
-                    );
-                }
             }
         }
 
-        System.out.println(
-                "\n---PHASE 5: PROCESSING "
-                        + "SECOND VEHICLE---\n"
-        );
 
-        String car2 =
-                trafficQueue.dequeue();
 
-        String owner2 =
-                "Abu";
+        printPhase("PHASE 5 : PROCESSING SECOND VEHICLE");
+
+
+        String car2 = trafficQueue.dequeue();
+        String owner2 = "Abu";
+
 
         if (car2 != null) {
 
-            ParkingSlot assignedSlot =
-                    prioritizer.assignSlot();
+
+            ParkingSlot assignedSlot = prioritizer.assignSlot();
+
 
             if (assignedSlot != null) {
 
-                String slotId =
-                        assignedSlot.getSlotId();
 
-                campusMap.navigateToNearestSlot(
-                        "Main_Gate"
+                String slotId = assignedSlot.getSlotId();
+
+
+                campusMap.navigateToSlot(
+                        "Main_Gate",
+                        slotId
                 );
 
-                boolean addedToCore =
-                        coreSystem.addVehicle(
-                                car2,
-                                owner2,
-                                slotId
-                        );
 
-                if (addedToCore) {
+                coreSystem.addVehicle(
+                        car2,
+                        owner2,
+                        slotId
+                );
 
-                    boolean addedToSearch =
-                            searchSystem.addVehicle(
-                                    car2,
-                                    owner2,
-                                    slotId
-                            );
 
-                    if (addedToSearch) {
+                searchSystem.addVehicle(
+                        car2,
+                        owner2,
+                        slotId
+                );
 
-                        boolean slotOccupied =
-                                campusMap.markSlotOccupied(
-                                        slotId
-                                );
 
-                        if (slotOccupied) {
+                campusMap.markSlotOccupied(slotId);
 
-                            actionHistory.pushAction(
-                                    ActionType.ADD,
-                                    car2,
-                                    owner2,
-                                    slotId
-                            );
 
-                        } else {
+                actionHistory.pushAction(
+                        ActionType.ADD,
+                        car2,
+                        owner2,
+                        slotId
+                );
 
-                            System.out.println(
-                                    "Error: Slot state update failed."
-                            );
-                        }
-
-                    } else {
-
-                        System.out.println(
-                                "Error: Search system "
-                                        + "rejected vehicle."
-                        );
-                    }
-                }
             }
+
         }
 
-        System.out.println(
-                "\n---PHASE 6: SEARCH "
-                        + "AND SYSTEM STATE---\n"
-        );
 
-        System.out.println(
-                "Testing O(1) Fast Search for WUV8888:"
-        );
 
-        searchSystem.searchVehicleFast(
-                "WUV8888"
-        );
 
-        System.out.println(
-                "\nTesting O(1) Fast Search "
-                        + "for an invalid car:"
-        );
+        printPhase("PHASE 6 : SEARCH AND SYSTEM STATE");
 
-        searchSystem.searchVehicleFast(
-                "FAKE999"
-        );
+
+
+        System.out.println("Testing O(1) Fast Search for WUV8888:");
+
+        searchSystem.searchVehicleFast("WUV8888");
+
+
+
+        System.out.println("\nTesting O(1) Fast Search for invalid vehicle:");
+
+        searchSystem.searchVehicleFast("FAKE999");
+
+
 
         coreSystem.displayVehicles();
 
+
         searchSystem.displayVehiclesSorted();
 
+
+
         System.out.println(
-                "Total vehicles parked: "
+                "Total vehicles parked : "
                         + coreSystem.getSize()
         );
 
-        System.out.println(
-                "\n---PHASE 7: VEHICLE DEPARTURE "
-                        + "AND UNDO---\n"
-        );
 
-        String leavingCar =
-                "WUV8888";
+
+
+
+        printPhase("PHASE 7 : VEHICLE DEPARTURE AND UNDO RECOVERY");
+
+
+
+        String leavingCar = "WUV8888";
+
 
         VehicleNode removedNode =
-                coreSystem.getVehicle(
-                        leavingCar
-                );
+                coreSystem.getVehicle(leavingCar);
+
+
 
         if (removedNode != null) {
+
 
             String freedSlotId =
                     removedNode.getParkingSlot();
 
-            boolean removedFromCore =
-                    coreSystem.removeVehicle(
-                            leavingCar
-                    );
 
-            boolean removedFromSearch =
-                    searchSystem.removeVehicle(
-                            leavingCar
-                    );
 
-            if (removedFromCore
-                    && removedFromSearch) {
+            coreSystem.removeVehicle(leavingCar);
 
-                actionHistory.pushAction(
-                        ActionType.REMOVE,
-                        removedNode.getLicensePlate(),
-                        removedNode.getOwnerName(),
-                        freedSlotId
-                );
 
-                prioritizer.releaseSlot(
-                        slotN1
-                );
+            searchSystem.removeVehicle(leavingCar);
 
-                campusMap.markSlotAvailable(
-                        freedSlotId
-                );
 
-            } else {
 
-                System.out.println(
-                        "Error: Vehicle removal "
-                                + "was not completed consistently."
-                );
-            }
+            actionHistory.pushAction(
+                    ActionType.REMOVE,
+                    removedNode.getLicensePlate(),
+                    removedNode.getOwnerName(),
+                    freedSlotId
+            );
+
+
+
+            prioritizer.releaseSlot(slotN1);
+
+
+            campusMap.markSlotAvailable(
+                    freedSlotId
+            );
+
         }
 
+
+
+
         System.out.println(
-                "\nWait that was a mistake! "
-                        + "Undoing the last action..."
+                "\nMistake detected! Undoing last action..."
         );
+
+
 
         Action lastAction =
                 actionHistory.undoAction();
 
-        if (lastAction != null
-                && lastAction.getActionType()
-                == ActionType.REMOVE) {
+
+
+
+        if(lastAction != null &&
+                lastAction.getActionType() == ActionType.REMOVE) {
+
+
 
             System.out.println(
-                    "Restoring vehicle: "
+                    "Restoring vehicle : "
                             + lastAction.getLicensePlate()
             );
 
-            boolean restoredToCore =
-                    coreSystem.addVehicle(
-                            lastAction.getLicensePlate(),
-                            lastAction.getOwnerName(),
-                            lastAction.getParkingSlot()
-                    );
 
-            if (restoredToCore) {
 
-                boolean restoredToSearch =
-                        searchSystem.addVehicle(
-                                lastAction.getLicensePlate(),
-                                lastAction.getOwnerName(),
-                                lastAction.getParkingSlot()
-                        );
+            coreSystem.addVehicle(
+                    lastAction.getLicensePlate(),
+                    lastAction.getOwnerName(),
+                    lastAction.getParkingSlot()
+            );
 
-                if (restoredToSearch) {
 
-                    campusMap.markSlotOccupied(
-                            lastAction.getParkingSlot()
-                    );
 
-                } else {
+            searchSystem.addVehicle(
+                    lastAction.getLicensePlate(),
+                    lastAction.getOwnerName(),
+                    lastAction.getParkingSlot()
+            );
 
-                    System.out.println(
-                            "Restore failed — "
-                                    + "search system rejected vehicle."
-                    );
-                }
 
-            } else {
 
-                System.out.println(
-                        "Restore failed — vehicle "
-                                + "could not be re-added."
-                );
-            }
+            campusMap.markSlotOccupied(
+                    lastAction.getParkingSlot()
+            );
+
+
+            prioritizer.assignSlot();
+
         }
 
-        System.out.println(
-                "\n---FINAL SYSTEM STATE---\n"
-        );
+
+
+
+
+        printPhase("FINAL SYSTEM STATE");
+
 
         searchSystem.displayVehiclesSorted();
+
+        campusMap.displayParkingStatus();
+
     }
 }

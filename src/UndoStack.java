@@ -8,49 +8,30 @@ public class UndoStack {
         stack = new Stack<>();
     }
 
-    public boolean pushAction(
-            ActionType actionType,
-            String username,
-            String licensePlate,
-            String ownerName,
-            String parkingSlot,
-            String description
-    ) {
+    public void pushAction(ActionType type,
+                           String plate,
+                           String owner,
+                           String slot) {
 
-        if (actionType == null) {
-            System.out.println("Error: Action type cannot be null.");
-            return false;
-        }
-
-        if (username == null || username.isBlank()) {
-            System.out.println("Error: Username cannot be empty.");
-            return false;
-        }
-
-        stack.push(
-                new Action(
-                        actionType,
-                        username.trim().toLowerCase(),
-                        licensePlate == null ? "" : licensePlate.trim().toUpperCase(),
-                        ownerName == null ? "" : ownerName.trim(),
-                        parkingSlot == null ? "" : parkingSlot.trim().toUpperCase(),
-                        description == null ? "" : description.trim()
-                )
-        );
-
-        return true;
+        stack.push(new Action(type, plate, owner, slot));
+        System.out.println("Action saved.");
     }
 
     public Action undoAction() {
 
         if (stack.isEmpty()) {
-
-            System.out.println("No actions available to undo.");
-
+            System.out.println("Nothing to undo.");
             return null;
         }
 
-        return stack.pop();
+        Action action = stack.pop();
+
+        System.out.println("Undo : "
+                + action.getActionType()
+                + " -> "
+                + action.getLicensePlate());
+
+        return action;
     }
 
     public boolean isEmpty() {
@@ -59,9 +40,5 @@ public class UndoStack {
 
     public int size() {
         return stack.size();
-    }
-
-    public void clear() {
-        stack.clear();
     }
 }
